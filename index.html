@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CS Dept | Timetable Manager</title>
+  <title>CS Dept | Timetable Manager</title>
+  <!-- Excel-style Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%231D6F42' rx='4'/%3E%3Cpath d='M6 7h12v2H6V7zm0 4h12v2H6v-2zm0 4h12v2H6v-2z' fill='white'/%3E%3Cpath d='M4 5h16v14H4V5zm1 1v12h14V6H5z' fill='rgba(255,255,255,0.3)'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="brand">
+    <!-- Using the AIOU Logo -->
+    <img src="aiou-logo.png" alt="AIOU Logo" class="brand-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';">
+    <div class="brand-icon" style="display:none;"><i class="fa-solid fa-calendar-days"></i></div>
+    <div class="brand-text">
+      <span class="brand-title">CS Department</span>
+      <span class="brand-sub">AIOU Timetable</span>
+    </div>
+  </div>
+  
+  <nav id="nav">
+    <div class="nav-group">WORKSPACE</div>
+    <button class="nav-item active" data-view="dashboard"><i class="fa-solid fa-house"></i> Dashboard</button>
+    <button class="nav-item" data-view="builder"><i class="fa-solid fa-table-cells-large"></i> Timetable Builder</button>
+    <button class="nav-item" data-view="saved"><i class="fa-solid fa-floppy-disk"></i> Saved Timetables</button>
+    
+    <div class="nav-group">MANAGE ENTITIES</div>
+    <button class="nav-item" data-view="programs"><i class="fa-solid fa-graduation-cap"></i> Programs</button>
+    <button class="nav-item" data-view="teachers"><i class="fa-solid fa-chalkboard-user"></i> Teachers</button>
+    <button class="nav-item" data-view="courses"><i class="fa-solid fa-book"></i> Courses</button>
+    <button class="nav-item" data-view="rooms"><i class="fa-solid fa-door-open"></i> Rooms</button>
+    
+    <div class="nav-group">SYSTEM</div>
+    <button class="nav-item" data-view="export"><i class="fa-solid fa-file-export"></i> Export & Publish</button>
+  </nav>
+  
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar">AD</div>
+      <div class="user-info">
+        <span class="name">Admin User</span>
+        <span class="role">Timetable Manager</span>
+      </div>
+    </div>
+    <div class="save-state" id="saveState"><i class="fa-solid fa-cloud"></i> Auto-save on</div>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="filters">
+      <label>Program <select id="fProgram"></select></label>
+      <label>Semester <select id="fSemester"></select></label>
+      <label>Section <select id="fSection"></select></label>
+    </div>
+    
+    <div class="actions">
+      <button class="btn" id="btnSaveTimetable"><i class="fa-solid fa-floppy-disk"></i> Save View</button>
+      <button class="btn icon-only" id="btnImport" title="Import JSON"><i class="fa-solid fa-upload"></i></button>
+      <input type="file" id="fileImport" accept="application/json,.json" hidden>
+      <button class="btn icon-only" id="btnExportJson" title="Export JSON"><i class="fa-solid fa-download"></i></button>
+      <button class="btn primary" id="btnAddSession"><i class="fa-solid fa-plus"></i> Add Session</button>
+    </div>
+  </header>
+
+  <main class="content">
+    <section class="view active" id="view-dashboard">
+      <div class="welcome-banner">
+        <div class="welcome-text">
+          <h1>Allama Iqbal Open University</h1>
+          <h2 style="font-size: 18px; margin-top: 8px; font-weight: 500; color: #e0e7ff;">Department of Computer Science</h2>
+          <p style="margin-top: 16px; opacity: 0.9;">Manage your department's timetable efficiently.</p>
+        </div>
+        <img src="aiou-logo.png" alt="AIOU" class="banner-logo" onerror="this.style.display='none';">
+      </div>
+      <div class="stats" id="stats"></div>
+      <div class="card">
+        <h2><i class="fa-solid fa-circle-info" style="color: var(--accent); margin-right: 8px;"></i> Getting Started</h2>
+        <p class="muted" id="dashHint" style="margin-top: 8px; line-height: 1.6;"></p>
+      </div>
+    </section>
+
+    <section class="view" id="view-builder">
+      <div class="view-head">
+        <div>
+          <h1 id="builderTitle">Timetable Builder</h1>
+          <span class="muted">Click an empty cell to add a session, or click an existing block to edit it.</span>
+        </div>
+        <div class="legend">
+          <span class="legend-item"><span class="dot theory"></span> Theory</span>
+          <span class="legend-item"><span class="dot lab"></span> Lab</span>
+          <span class="legend-item"><span class="dot free"></span> Free</span>
+          <span class="legend-item"><span class="dot conflict"></span> Conflict</span>
+        </div>
+      </div>
+      <div class="card grid-wrap"><div id="grid" class="tt-grid"></div></div>
+    </section>
+
+    <section class="view" id="view-saved">
+      <div class="list-head">
+        <h1>Saved Timetables</h1>
+      </div>
+      <div id="savedList" class="card-grid"></div>
+    </section>
+
+    <section class="view" id="view-programs"></section>
+    <section class="view" id="view-teachers"></section>
+    <section class="view" id="view-courses"></section>
+    <section class="view" id="view-rooms"></section>
+
+    <section class="view" id="view-export">
+      <div class="view-head">
+        <h1>Export Studio</h1>
+        <span class="muted">Generate clean images or Excel files for distribution.</span>
+      </div>
+      
+      <div class="card export-controls">
+        <label>Export level
+          <select id="xLevel">
+            <option value="dept">Entire department</option>
+            <option value="program">Specific program</option>
+            <option value="semester">Specific semester</option>
+            <option value="section">Specific section</option>
+          </select></label>
+        <label>Program <select id="xProgram"></select></label>
+        <label>Semester <select id="xSemester"></select></label>
+        <label>Section <select id="xSection"></select></label>
+        <label>Term label <input id="xTerm" value="Autumn 2026"></label>
+        
+        <div class="export-buttons">
+          <button class="btn primary" id="btnPng"><i class="fa-solid fa-image"></i> PNG</button>
+          <button class="btn" id="btnJpeg"><i class="fa-solid fa-file-image"></i> JPEG</button>
+          <button class="btn" id="btnExcel"><i class="fa-solid fa-file-excel"></i> Excel</button>
+        </div>
+      </div>
+      
+      <div class="export-preview">
+        <div id="exportCanvas" class="export-canvas"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="modal-backdrop" id="modal" hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <h2 id="modalTitle">Modal Title</h2>
+      <button class="icon-btn" id="modalClose" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form id="modalForm" class="modal-body"></form>
+    <div class="modal-foot">
+      <button class="btn danger" id="modalDelete" type="button" hidden><i class="fa-solid fa-trash"></i> Delete</button>
+      <span class="spacer"></span>
+      <button class="btn" id="modalCancel" type="button">Cancel</button>
+      <button class="btn primary" id="modalSave" type="button">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+</body>
+</html>
